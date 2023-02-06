@@ -1,6 +1,6 @@
 # Amazon IAP Kotlin Example  
 
-This project is a simple demonstration of the [Amazon IAP API] (https://developer.amazon.com/docs/in-app-purchasing/iap-overview.html).
+This project is a simple demonstration of the (Amazon IAP API) [https://developer.amazon.com/docs/in-app-purchasing/iap-overview.html].
  
 ## 💻 Building the IAP demo
 
