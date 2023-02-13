@@ -11,11 +11,11 @@ This project is a simple demonstration of the [Amazon IAP API](https://developer
 ## 🧪 How to test with In-App Items
 
 **Step 1:** 
-Push the example [Amazon.SDKTester.json](https://github.com/anishamalde/amazon-iap-kotlin-demo/blob/master/amazon.sdktester.json) file to your device using the command:
+Push the example [amazon.sdktester.json](https://github.com/anishamalde/amazon-iap-kotlin/blob/main/amazon.sdktester.json) file to your device using the command:
 ```
 adb push <_Your_JSON_File_Folder_>/amazon.sdktester.json /sdcard/amazon.sdktester.json
 ```
-This JSON file is usually created when you (create IAP items)[https://www.youtube.com/watch?v=cmPAY16wGb0] in the developer portal, however, for the sake of this demo we can use an exaple JSON.
+This JSON file is usually created when you [create IAP items](https://www.youtube.com/watch?v=cmPAY16wGb0) in the developer portal, however, for the sake of this demo we can use an example JSON.
 
 **Step 2:**
 Set your app in sandbox mode using the following command:
