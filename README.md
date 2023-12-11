@@ -5,7 +5,7 @@ This project is a simple demonstration of the [Amazon IAP API](https://developer
 ## 💻 Building the IAP demo
 
 1. Clone the demo app repository:
-`git clone git@github.com:anishamalde/amazon-iap-kotlin-demo`
+`git clone https://github.com/AmazonAppDev/amazon-iap-kotlin.git`
 2. Connect your Fire tablet device following these [instructions](https://developer.amazon.com/docs/fire-tablets/connecting-adb-to-device.html).
 
 ## 🧪 How to test with In-App Items
