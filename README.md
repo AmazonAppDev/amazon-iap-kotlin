@@ -1,6 +1,6 @@
 # Amazon IAP Kotlin Example  
 
-This project is a simple demonstration of the [Amazon IAP API](https://developer.amazon.com/docs/in-app-purchasing/iap-overview.html)
+This project is a simple demonstration of the [Amazon IAP API](https://developer.amazon.com/docs/in-app-purchasing/iap-overview.html) on a Amazon Fire Tablet.
  
 ## 💻 Building the IAP demo
 
@@ -11,7 +11,7 @@ This project is a simple demonstration of the [Amazon IAP API](https://developer
 ## 🧪 How to test with In-App Items
 
 **Step 1:** 
-Push the example [amazon.sdktester.json](https://github.com/anishamalde/amazon-iap-kotlin/blob/main/amazon.sdktester.json) file to your device using the command:
+Push the example [amazon.sdktester.json](https://github.com/AmazonAppDev/amazon-iap-kotlin/blob/main/amazon.sdktester.json) file to your device using the command:
 ```
 adb push <_Your_JSON_File_Folder_>/amazon.sdktester.json /sdcard/amazon.sdktester.json
 ```
@@ -43,7 +43,7 @@ To learn more about the API you can check out the [documentation](https://develo
 If you found a bug or want to suggest a new [feature/use case/sample], please [file an issue](../../issues).
 
 If you have questions, comments, or need help with code, we're here to help:
-- on Twitter at [@AmazonAppDev](https://twitter.com/AmazonAppDev)
+- on X at [@AmazonAppDev](https://twitter.com/AmazonAppDev)
 - on Stack Overflow at the [amazon-appstore](https://stackoverflow.com/questions/tagged/amazon-appstore) tag
 
 ### Stay updated
