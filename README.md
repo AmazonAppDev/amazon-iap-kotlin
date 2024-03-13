@@ -1,3 +1,5 @@
+![Android build](https://github.com/AmazonAppDev/amazon-iap-kotlin/actions/workflows/android.yml/badge.svg)
+
 # Amazon IAP Kotlin Example  
 
 This project is a simple demonstration of the [Amazon IAP API](https://developer.amazon.com/docs/in-app-purchasing/iap-overview.html) on a Amazon Fire Tablet.
