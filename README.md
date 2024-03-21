@@ -1,4 +1,4 @@
-![Android build](https://github.com/AmazonAppDev/amazon-iap-kotlin/actions/workflows/android.yml/badge.svg)
+[![Android build](https://github.com/AmazonAppDev/amazon-iap-kotlin/actions/workflows/android.yml/badge.svg)](https://github.com/AmazonAppDev/amazon-iap-kotlin/actions/workflows/android.yml)
 
 # Amazon IAP Kotlin Example  
 
