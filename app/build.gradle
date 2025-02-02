@@ -25,7 +25,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "IAPKotlinApp.example.myapp"
+        applicationId "Kotlin_IAP_Test_App.example.myapp"
         minSdk 21
         targetSdk 33
         versionCode 1
@@ -62,5 +62,6 @@ android {
         implementation 'com.amazon.device:amazon-appstore-sdk:3.0.3'
 
     }
+    namespace 'com.example.iapdemo'
 }
 
