@@ -16,8 +16,7 @@
  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.iapdemo">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <queries>
      <package android:name="com.amazon.sdktestclient" />
      <package android:name="com.amazon.venezia" />
