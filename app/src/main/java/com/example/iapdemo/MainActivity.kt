@@ -29,6 +29,7 @@ import com.amazon.device.iap.model.ProductDataResponse
 import com.amazon.device.iap.model.PurchaseResponse
 import com.amazon.device.iap.model.FulfillmentResult
 import com.amazon.device.iap.model.PurchaseUpdatesResponse
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.iapdemo.databinding.ActivityMainBinding
 import java.util.*
 
@@ -46,6 +47,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
+
+        binding.productsRecyclerView.layoutManager = LinearLayoutManager(this)
 
         PurchasingService.registerListener(this, purchasingListener)
         Log.v("KOTLIN_INTEGRATION", "Registering PurchasingListener")
@@ -98,6 +101,7 @@ class MainActivity : AppCompatActivity() {
                             "Product: ${product!!.title} \n Type: ${product.productType}\n SKU: ${product.sku}\n Price: ${product.price}\n Description: ${product.description}\n"
                         )
                     }
+                    binding.productsRecyclerView.adapter = ProductAdapter(products.values.toList())
                     for (s in productDataResponse.unavailableSkus) {
                         Log.v("KOTLIN_INTEGRATION", "Unavailable SKU:$s")
                     }
