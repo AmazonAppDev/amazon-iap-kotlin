@@ -1,0 +1,59 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# FiBot — GitHub Copilot Coding Agent Firewall
+# Amazon IAP Kotlin — Where Automation Meets Philosophy
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# "I am the watcher of versions, the keeper of compatibility,
+#  the guardian of your Kotlin builds. I stand at the gate and
+#  permit only trusted hosts to pass."
+#
+# Created by Fi (@QueenFi703) for Amazon IAP Kotlin
+# https://docs.github.com/en/copilot/using-github-copilot/using-copilot-coding-agent-to-work-on-tasks/configuring-copilot-coding-agent-in-your-repository
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Pre-firewall setup steps run before network restrictions are applied.
+pre_install:
+  steps:
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Make Gradle wrapper executable
+      run: chmod +x ./gradlew
+
+    - name: Restore Gradle dependency cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          gradle-
+
+firewall:
+  allowed_hosts:
+    # ── Gradle infrastructure ──────────────────────────────────────
+    - services.gradle.org
+    - plugins.gradle.org
+    - downloads.gradle-dn.com
+    - downloads.gradle.org
+    # ── Maven repositories ─────────────────────────────────────────
+    - repo1.maven.org
+    - repo.maven.apache.org
+    # ── Google / Android ───────────────────────────────────────────
+    - dl.google.com
+    - maven.google.com
+    # ── GitHub Packages (for Amazon IAP SDK) ───────────────────────
+    - maven.pkg.github.com
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 📜 FiBot PHILOSOPHY
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# "Be Literal. Be Philosophical. Be FiBot." 🤖🔮
