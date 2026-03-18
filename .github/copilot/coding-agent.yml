@@ -26,7 +26,7 @@ pre_install:
     - name: Make Gradle wrapper executable
       run: chmod +x ./gradlew
 
-    - name: Restore Gradle dependency cache
+    - name: Cache Gradle packages
       uses: actions/cache@v4
       with:
         path: |
@@ -35,6 +35,14 @@ pre_install:
         key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
           gradle-
+
+    # This step runs before the firewall is enabled, so dl.google.com and all
+    # other Maven repositories are reachable.  It downloads the Android Gradle
+    # Plugin (AGP) and every project/test dependency into the local Gradle cache
+    # so that subsequent agent commands (which run behind the firewall) never
+    # need to reach out to dl.google.com or other external hosts.
+    - name: Pre-download Gradle and all project dependencies
+      run: ./gradlew dependencies --no-daemon
 
 firewall:
   allowed_hosts:
