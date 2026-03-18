@@ -1,0 +1,77 @@
+name: Setup Branch Ruleset
+
+on:
+  workflow_dispatch:          # run once manually after merging this PR
+  push:
+    branches: [ "main" ]      # re-enforce on every push to main
+    paths:
+      - '.github/workflows/setup-branch-ruleset.yml'
+
+permissions:
+  administration: write       # required to create / update rulesets
+
+jobs:
+  create-ruleset:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create (or update) "Protect main branch" ruleset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          RULESET_NAME="Protect main branch"
+
+          # ── Check if the ruleset already exists ─────────────────────────
+          EXISTING_ID=$(gh api "repos/${REPO}/rulesets" \
+            --jq ".[] | select(.name == \"${RULESET_NAME}\") | .id" 2>/dev/null || true)
+
+          PAYLOAD='{
+            "name": "Protect main branch",
+            "target": "branch",
+            "enforcement": "active",
+            "conditions": {
+              "ref_name": {
+                "include": ["refs/heads/main"],
+                "exclude": []
+              }
+            },
+            "rules": [
+              { "type": "deletion" },
+              { "type": "non_fast_forward" },
+              {
+                "type": "pull_request",
+                "parameters": {
+                  "required_approving_review_count": 1,
+                  "dismiss_stale_reviews_on_push": true,
+                  "require_code_owner_review": true,
+                  "require_last_push_approval": true,
+                  "required_review_thread_resolution": true
+                }
+              },
+              {
+                "type": "required_status_checks",
+                "parameters": {
+                  "required_status_checks": [
+                    { "context": "Android CI / build" }
+                  ],
+                  "strict_required_status_checks_policy": true,
+                  "do_not_enforce_on_create": false
+                }
+              }
+            ]
+          }'
+
+          if [ -n "${EXISTING_ID}" ]; then
+            echo "Ruleset '${RULESET_NAME}' already exists (id=${EXISTING_ID}). Updating..."
+            gh api --method PUT "repos/${REPO}/rulesets/${EXISTING_ID}" \
+              --input - <<< "${PAYLOAD}"
+          else
+            echo "Creating ruleset '${RULESET_NAME}'..."
+            gh api --method POST "repos/${REPO}/rulesets" \
+              --input - <<< "${PAYLOAD}"
+          fi
+
+          echo "✅ Ruleset '${RULESET_NAME}' is active."
