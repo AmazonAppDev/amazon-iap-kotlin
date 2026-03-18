@@ -1,0 +1,129 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# FiBot
+# The Amazon IAP Dependency Oracle - Where Automation Meets Philosophy
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# "I am the watcher of versions, the keeper of compatibility,
+#  the guardian of your Kotlin builds.  I dredge dependencies from
+#  the depths of semver chaos and surface only what is stable."
+#
+# Created by Fi (@QueenFi703) for Amazon IAP Kotlin
+# Architecture: Modular, event-driven, elegantly complex
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+version: 2
+updates:
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # 🐘 GRADLE ECOSYSTEM - The Kotlin/Android Build Layer
+  # Dependencies: Android SDK + Kotlin + Amazon IAP
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:10"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    target-branch: "main"
+
+    groups:
+      android-tools:
+        patterns:
+          - "com.android.tools.build*"
+          - "com.android*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "org.jetbrains*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      androidx:
+        patterns:
+          - "androidx.*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      testing:
+        patterns:
+          - "junit*"
+          - "org.junit*"
+          - "org.mockito*"
+          - "io.mockk*"
+        update-types:
+          - "minor"
+          - "patch"
+
+    labels:
+      - "🤖 FiBot"
+      - "dependencies"
+      - "gradle"
+      - "android"
+
+    reviewers:
+      - "QueenFi703"
+
+    commit-message:
+      prefix: "⬆️ [FiBot/Gradle]"
+      prefix-development: "⬆️ [FiBot/Dev]"
+      include: "scope"
+
+    ignore:
+      # Android Gradle Plugin: Pin major for build compatibility
+      - dependency-name: "com.android.tools.build:gradle"
+        update-types: ["version-update:semver-major"]
+
+      # Kotlin: Pin major for source/binary compatibility
+      - dependency-name: "org.jetbrains.kotlin*"
+        update-types: ["version-update:semver-major"]
+
+      # AndroidX: Major bumps may require API-level changes
+      - dependency-name: "androidx.*"
+        update-types: ["version-update:semver-major"]
+
+      # Global guard: no major bumps without manual review
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # ⚙️ GITHUB ACTIONS - The CI/CD Automation Layer
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:10"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    target-branch: "main"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "🤖 FiBot"
+      - "dependencies"
+      - "github-actions"
+      - "ci-cd"
+    reviewers:
+      - "QueenFi703"
+    commit-message:
+      prefix: "⬆️ [FiBot/CI]"
+      include: "scope"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 📜 FiBot PHILOSOPHY
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# "Be Literal. Be Philosophical. Be FiBot." 🤖🔮
