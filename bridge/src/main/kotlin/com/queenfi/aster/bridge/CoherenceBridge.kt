@@ -20,7 +20,6 @@ package com.queenfi.aster.bridge
 
 import android.content.Context
 import com.amazon.device.iap.PurchasingListener
-import com.amazon.device.iap.PurchasingService
 import com.amazon.device.iap.model.FulfillmentResult
 import com.amazon.device.iap.model.ProductDataResponse
 import com.amazon.device.iap.model.PurchaseResponse
@@ -53,8 +52,14 @@ interface BridgeContext {
  *
  * This keeps the bridge substrate-agnostic: the host runtime only needs to implement
  * [BridgeContext]; it does not need to know about Amazon IAP internals.
+ *
+ * In production, pass the default [RealIapService].  In tests, inject a mock [IapService]
+ * to exercise purchase flows and user-data retrieval without a real Appstore connection.
  */
-class CoherenceBridge(private val context: Context) {
+class CoherenceBridge(
+    private val context: Context,
+    private val iapService: IapService = RealIapService()
+) {
 
     private var bridgeContext: BridgeContext? = null
     private var purchasingListener: PurchasingListener? = null
@@ -78,12 +83,12 @@ class CoherenceBridge(private val context: Context) {
 
     /**
      * Register the [PurchasingListener] with the Amazon Appstore and fetch user data.
-     * Returns the [RequestId] produced by [PurchasingService.getUserData].
+     * Returns the [RequestId] produced by [IapService.getUserData].
      */
     fun preparePhase(listener: PurchasingListener): RequestId {
         purchasingListener = listener
-        PurchasingService.registerListener(context, listener)
-        return PurchasingService.getUserData()
+        iapService.registerListener(context, listener)
+        return iapService.getUserData()
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -92,25 +97,25 @@ class CoherenceBridge(private val context: Context) {
 
     /**
      * Query product data for the given [skus].
-     * Returns the [RequestId] produced by [PurchasingService.getProductData].
+     * Returns the [RequestId] produced by [IapService.getProductData].
      */
     fun executeProductDataQuery(skus: Set<String>): RequestId {
-        return PurchasingService.getProductData(skus)
+        return iapService.getProductData(skus)
     }
 
     /**
      * Initiate a purchase for the given [sku].
-     * Returns the [RequestId] produced by [PurchasingService.purchase].
+     * Returns the [RequestId] produced by [IapService.purchase].
      */
     fun executePurchasePhase(sku: String): RequestId {
-        return PurchasingService.purchase(sku)
+        return iapService.purchase(sku)
     }
 
     /**
      * Notify the Appstore that a purchase has been fulfilled.
      */
     fun executeFulfillmentPhase(receiptId: String, result: FulfillmentResult) {
-        PurchasingService.notifyFulfillment(receiptId, result)
+        iapService.notifyFulfillment(receiptId, result)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
