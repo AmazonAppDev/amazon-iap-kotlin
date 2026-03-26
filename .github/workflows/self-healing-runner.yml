@@ -1,0 +1,57 @@
+name: Self-Healing Runner
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"  # every 10 minutes
+
+jobs:
+  heal-runner:
+    runs-on: self-hosted
+
+    steps:
+    - name: Check runner services
+      id: check
+      run: |
+        services=$(systemctl list-units --type=service | grep actions-runner || true)
+
+        if [ -n "$services" ]; then
+          echo "found=true" >> $GITHUB_OUTPUT
+        else
+          echo "found=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Restart runner if present
+      if: steps.check.outputs.found == 'true'
+      run: |
+        echo "Restarting runner services..."
+        sudo systemctl daemon-reload
+        sudo systemctl restart actions-runner*
+        sleep 3
+        sudo systemctl status actions-runner* --no-pager
+
+    - name: Attempt recovery if missing
+      if: steps.check.outputs.found == 'false'
+      run: |
+        echo "Runner service missing. Attempting recovery..."
+
+        cd ~/actions-runner || exit 1
+
+        # Stop any broken instance
+        ./svc.sh stop || true
+
+        # Reinstall service
+        sudo ./svc.sh uninstall || true
+        sudo ./svc.sh install
+        sudo ./svc.sh start
+
+    - name: Verify runner is alive
+      run: |
+        echo "Verifying runner heartbeat..."
+        sleep 5
+
+        if systemctl list-units --type=service | grep -q actions-runner; then
+          echo "Runner is alive."
+        else
+          echo "Runner failed to recover." && exit 1
+        fi
