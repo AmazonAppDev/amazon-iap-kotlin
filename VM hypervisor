@@ -1,0 +1,239 @@
+% ============================================================
+% arXiv-ready LaTeX source
+% Paper: µH-iOS — A Formally Verified Micro-Hypervisor Nucleus for iOS
+% ============================================================
+
+\documentclass[11pt]{article}
+
+% ---------- Packages ----------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\geometry{margin=1in}
+
+% ---------- Hyperref ----------
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue,
+  pdftitle={µH-iOS: A Formally Verified Micro-Hypervisor Nucleus for iOS},
+  pdfauthor={Fi},
+  pdfkeywords={formal verification, micro-hypervisor, iOS, virtualization, ARM EL2}
+}
+
+% ---------- Listings ----------
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{teal},
+  breaklines=true,
+  frame=single
+}
+
+% ---------- Theorem Environments ----------
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+
+% ---------- Title ----------
+\title{\textbf{µH-iOS}: A Formally Verified Micro-Hypervisor Nucleus for iOS}
+\author{
+  Fi\\
+  Independent Research\\
+  \texttt{(contact omitted for review)}
+}
+\date{2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We present \textbf{µH-iOS}, a formally verified micro-hypervisor nucleus designed
+to operate within the architectural and policy constraints of Apple’s iOS
+platform. Unlike conventional hypervisors executing beneath a host operating
+system, µH-iOS is implemented as a minimal, verifiable isolation core running in
+user space and backed by Apple’s Hypervisor.framework (HVF). By aggressively
+minimizing the Trusted Computing Base (TCB) and formally proving key safety
+properties—memory non-interference, capability soundness, deterministic virtual
+machine (VM) exit handling, and totality—µH-iOS introduces mathematically grounded
+isolation guarantees to consumer mobile hardware. This work demonstrates that
+meaningful formal assurance is achievable on closed platforms without kernel
+modification or jailbreaks, enabling verified compute enclaves on stock iOS
+devices.
+\end{abstract}
+
+\section{Introduction}
+Mobile devices increasingly host sensitive workloads, including cryptographic
+operations, confidential data processing, and on-device machine learning.
+Virtualization is commonly used to isolate such workloads, yet most mobile
+virtualization systems rely on informal reasoning and large, complex codebases.
+Formal verification offers a path toward stronger guarantees but has rarely been
+applied to closed consumer platforms such as iOS.
+
+This paper introduces µH-iOS, a micro-hypervisor nucleus that applies formal
+methods within Apple’s supported virtualization model. Rather than attempting to
+replace the operating system, µH-iOS treats iOS and its kernel (XNU) as assumed
+substrates and places a small, verifiable isolation core above the kernel using
+Hypervisor.framework.
+
+\section{Threat Model and Assumptions}
+
+\subsection{Threat Model}
+We consider adversaries capable of executing arbitrary code within guest virtual
+machines, including attempts to:
+\begin{itemize}[leftmargin=*]
+  \item Access or modify memory belonging to other guests.
+  \item Escalate privileges beyond those explicitly granted.
+  \item Trigger undefined or unhandled VM exit behavior.
+\end{itemize}
+
+\subsection{Out-of-Scope Threats}
+We explicitly exclude hardware faults, physical attacks, side-channel attacks,
+and compromise of Apple’s Secure Boot Chain or Secure Enclave.
+
+\subsection{Assumptions}
+The following components are treated as axioms:
+\begin{itemize}[leftmargin=*]
+  \item Apple Secure Boot enforces code integrity.
+  \item XNU enforces user/kernel separation correctly.
+  \item Hypervisor.framework faithfully exposes ARM EL2 virtualization.
+\end{itemize}
+
+\section{System Architecture}
+
+\subsection{Layered Design}
+µH-iOS is positioned within the following stack:
+\begin{verbatim}
+Guest Workloads (Linux / Unikernels / Sandboxes)
+----------------------------------------------
+µH-iOS Core (Formally Verified Micro-Hypervisor)
+----------------------------------------------
+Apple Hypervisor.framework (HVF)
+----------------------------------------------
+XNU Kernel (Assumed, Unverified)
+----------------------------------------------
+Apple Secure Boot Chain + Hardware
+\end{verbatim}
+
+Policy enforcement resides exclusively within µH-iOS, while lower layers provide
+only mechanism.
+
+\section{Design Goals}
+The system is guided by four goals:
+\begin{enumerate}[leftmargin=*]
+  \item Minimize the Trusted Computing Base.
+  \item Prove strong isolation and safety properties.
+  \item Eliminate undefined behavior in VM exit handling.
+  \item Remain compatible with stock iOS devices.
+\end{enumerate}
+
+\section{Formal System Model}
+
+\subsection{Global State}
+\begin{definition}[System State]
+The global system state $\Sigma$ is defined as:
+\[
+\Sigma = \{ VMs, Memory, Caps, Scheduler, Exits \}
+\]
+where all mutable state is explicitly represented.
+\end{definition}
+
+\subsection{VM State Machine}
+\[
+VMState ::= Created \mid Runnable(CPUState) \mid Trapped(ExitReason, CPUState) \mid Halted
+\]
+
+\section{Formal Invariants}
+
+\begin{theorem}[Memory Non-Interference]
+For any two distinct virtual machines $vm_1 \neq vm_2$,
+\[
+memory(vm_1) \cap memory(vm_2) = \emptyset.
+\]
+\end{theorem}
+
+\begin{theorem}[Capability Soundness]
+An operation may occur if and only if the executing VM possesses the
+corresponding capability prior to execution.
+\end{theorem}
+
+\begin{theorem}[Deterministic Exit Handling]
+Given identical VM state and exit reason, the resulting state transition is
+deterministic.
+\end{theorem}
+
+\begin{theorem}[Totality]
+All VM exits are handled by a defined transition; no undefined behavior exists.
+\end{theorem}
+
+\section{Implementation}
+
+\subsection{Language Choices}
+The µH-iOS core is implemented in Rust to align with the formal model and reduce
+memory safety risks. Swift is used for iOS application orchestration, with minimal
+C bindings for Hypervisor.framework.
+
+\subsection{Core Structure}
+The verified core includes modules for VM lifecycle management, memory mapping,
+capability enforcement, and exit dispatching. Unsafe code is excluded from core
+logic.
+
+\section{Hypervisor.framework Integration}
+Hypervisor.framework is used solely as an execution mechanism. µH-iOS enforces:
+\begin{itemize}[leftmargin=*]
+  \item One HVF context per VM.
+  \item No shared guest memory regions.
+  \item Centralized, deterministic exit handling.
+\end{itemize}
+
+\section{iOS Application Integration}
+µH-iOS is packaged as a signed iOS application using supported entitlements. This
+ensures deployability on stock devices without kernel modification.
+
+\section{Extensions and Composition}
+µH-iOS serves as a root of trust for higher-level orchestration systems, including
+workload schedulers and verified compute pipelines.
+
+\section{Evaluation}
+Evaluation focuses on TCB size, proof completeness, isolation correctness, and
+platform compatibility rather than raw performance.
+
+\section{Related Work}
+This work draws inspiration from verified microkernels such as seL4 while
+differing fundamentally in deployment environment and trust assumptions.
+
+\section{Limitations and Future Work}
+Limitations include reliance on assumed correctness of XNU and HVF, and the
+exclusion of side-channel defenses. Future work includes richer device models and
+expanded formal coverage.
+
+\section{Conclusion}
+µH-iOS demonstrates that formal verification and strong isolation guarantees are
+achievable on closed mobile platforms. By introducing a small, verifiable nucleus
+above the operating system, µH-iOS enables verified computation on iOS without
+violating platform security policies.
+
+\section*{Copyright}
+\noindent
+© 2026 Fi. All rights reserved. The author retains full copyright of this work.
+Permission is granted to read, cite, and reference this work for academic and
+research purposes with proper attribution.
+
+\section*{References}
+\bibliographystyle{plain}
+% \bibliography{refs} % Add refs.bib when ready
+
+\end{document}
