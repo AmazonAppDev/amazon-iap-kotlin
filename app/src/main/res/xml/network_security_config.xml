@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ SPDX-License-Identifier: MIT-0
+
+ Network security configuration for the Amazon IAP demo app.
+ Allows the app to communicate with Amazon Appstore endpoints both in
+ sandbox (App Tester) mode and outside the sandbox (production Appstore).
+ -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <!-- Amazon Appstore production endpoint -->
+        <domain includeSubdomains="true">amazon.com</domain>
+        <!-- Amazon device services -->
+        <domain includeSubdomains="true">amazondeviceservices.com</domain>
+        <!-- Amazon IAP SDK sandbox endpoint (App Tester) -->
+        <domain includeSubdomains="true">amazonaws.com</domain>
+    </domain-config>
+</network-security-config>
