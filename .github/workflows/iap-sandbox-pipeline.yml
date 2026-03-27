@@ -1,0 +1,48 @@
+name: IAP Sandbox Pipeline  
+trigger:  
+  branches:  
+    include:  
+      - main  
+jobs:  
+  sandbox-validation:  
+    runs-on: ubuntu-latest  
+    steps:  
+      - checkout: {}  
+      - run: echo "Validating..."  
+  
+sandbox-graduation-check:  
+    runs-on: ubuntu-latest  
+    needs: [sandbox-validation, self-healing-agent]  
+    steps:  
+      - run: |  
+          if [[ ${{ needs.sandbox-validation.result }} == 'success' && ${{ needs.full-suite.result }} == 'success' ]]; then  
+            echo "All validations passed!";  
+          elif [[ ${{ needs.self-healing-agent.result }} == 'success' ]]; then  
+            echo "Recovered from flaky test!";  
+          else  
+            echo "Check failed!";  
+            exit 1;  
+          fi  
+  
+  self-healing-agent:  
+    runs-on: ubuntu-latest  
+    needs: sandbox-validation  
+    if: failure()  
+    strategy:  
+      matrix:  
+        scenario:  
+          - scenario1  
+          - scenario2  
+    retries: 1  
+    continue-on-error: true  
+    steps:  
+      - run: ./gradlew test --info  
+        env:  
+          RESULT: ${{ job.status }}  
+      - run: |  
+          if [[ $RESULT == 'success' ]]; then  
+            echo "Retry succeeded; classifying as flaky.";  
+          else  
+            echo "Retry failed, marking job as failed.";  
+            exit 1;  
+          fi  
