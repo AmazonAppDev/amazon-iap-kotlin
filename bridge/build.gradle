@@ -19,6 +19,7 @@
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
+    id 'maven-publish'
 }
 
 android {
@@ -48,4 +49,39 @@ dependencies {
     implementation 'com.amazon.device:amazon-appstore-sdk:3.0.3'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'io.mockk:mockk:1.13.8'
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+
+                groupId    = 'com.queenfi.aster'
+                artifactId = 'bridge'
+                version    = '0.1.0'
+            }
+        }
+
+        repositories {
+            maven {
+                name = 'CodeArtifact'
+                // URL constructed from env vars supplied by the CI workflow:
+                // CODEARTIFACT_DOMAIN, CODEARTIFACT_DOMAIN_OWNER,
+                // CODEARTIFACT_REPOSITORY (region is always us-east-1)
+                def domain     = System.getenv('CODEARTIFACT_DOMAIN')      ?: ''
+                def owner      = System.getenv('CODEARTIFACT_DOMAIN_OWNER') ?: ''
+                def repository = System.getenv('CODEARTIFACT_REPOSITORY')  ?: ''
+                url = uri(
+                    domain && owner && repository
+                        ? "https://${domain}-${owner}.d.codeartifact.us-east-1.amazonaws.com/maven/${repository}/"
+                        : "file://${rootProject.buildDir}/local-maven-repo"
+                )
+                credentials {
+                    username = 'aws'
+                    password = System.getenv('CODEARTIFACT_AUTH_TOKEN') ?: ''
+                }
+            }
+        }
+    }
 }
