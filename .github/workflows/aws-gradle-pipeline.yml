@@ -1,0 +1,220 @@
+name: AWS Gradle Pipeline (S3 + CodeArtifact + Device Farm)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  S3_BUCKET: queenfi703-amazon-iap-artifacts-us-east-1
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Run unit tests
+        run: ./gradlew test --no-daemon
+
+      - name: Assemble release APK
+        run: ./gradlew :app:assembleRelease
+
+      - name: Bundle release AAB
+        run: ./gradlew :app:bundleRelease
+
+      - name: Upload build outputs as GitHub Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-outputs
+          path: |
+            app/build/outputs/apk/**/*.apk
+            app/build/outputs/bundle/**/*.aab
+
+  publish_s3:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download build outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: android-build-outputs
+          path: _artifacts
+
+      - name: Configure AWS credentials (long-lived keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Create S3 bucket if missing (us-east-1)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if aws s3api head-bucket --bucket "${S3_BUCKET}" 2>/dev/null; then
+            echo "Bucket already exists: ${S3_BUCKET}"
+          else
+            echo "Creating bucket: ${S3_BUCKET}"
+            # us-east-1 must NOT pass LocationConstraint
+            aws s3api create-bucket --bucket "${S3_BUCKET}" --region us-east-1
+          fi
+
+      - name: Upload artifacts to S3 and write manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          PREFIX="builds/${GITHUB_REPOSITORY}/${GITHUB_SHA}"
+
+          aws s3 sync "_artifacts" "s3://${S3_BUCKET}/${PREFIX}/" --no-progress
+
+          cat > release-manifest.json <<EOF
+          {
+            "repo": "${GITHUB_REPOSITORY}",
+            "sha": "${GITHUB_SHA}",
+            "run_id": "${GITHUB_RUN_ID}",
+            "bucket": "${S3_BUCKET}",
+            "prefix": "${PREFIX}",
+            "region": "us-east-1"
+          }
+          EOF
+
+          aws s3 cp release-manifest.json \
+            "s3://${S3_BUCKET}/${PREFIX}/release-manifest.json" \
+            --no-progress
+
+  publish_codeartifact:
+    needs: build
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/main' &&
+      vars.CODEARTIFACT_DOMAIN != '' &&
+      vars.CODEARTIFACT_REPOSITORY != '' &&
+      vars.CODEARTIFACT_DOMAIN_OWNER != ''
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Configure AWS credentials (long-lived keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Get CodeArtifact auth token
+        id: ca_token
+        shell: bash
+        run: |
+          set -euo pipefail
+          TOKEN="$(aws codeartifact get-authorization-token \
+            --domain "${{ vars.CODEARTIFACT_DOMAIN }}" \
+            --domain-owner "${{ vars.CODEARTIFACT_DOMAIN_OWNER }}" \
+            --query authorizationToken \
+            --output text)"
+          echo "token=${TOKEN}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish :bridge to CodeArtifact
+        env:
+          CODEARTIFACT_AUTH_TOKEN: ${{ steps.ca_token.outputs.token }}
+          CODEARTIFACT_DOMAIN: ${{ vars.CODEARTIFACT_DOMAIN }}
+          CODEARTIFACT_DOMAIN_OWNER: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          CODEARTIFACT_REPOSITORY: ${{ vars.CODEARTIFACT_REPOSITORY }}
+        run: |
+          ./gradlew :bridge:publish
+
+  device_farm:
+    needs: build
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/main' &&
+      secrets.DEVICE_FARM_PROJECT_ARN != '' &&
+      secrets.DEVICE_FARM_DEVICE_POOL_ARN != ''
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Configure AWS credentials (long-lived keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download build outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: android-build-outputs
+          path: _artifacts
+
+      - name: Upload release APK to Device Farm
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="$(find _artifacts -name '*.apk' | head -n 1)"
+          if [ -z "${APK}" ]; then
+            echo "No APK found in build outputs." && exit 1
+          fi
+          echo "Uploading APK: ${APK}"
+
+          UPLOAD_ARN="$(aws devicefarm create-upload \
+            --project-arn "${{ secrets.DEVICE_FARM_PROJECT_ARN }}" \
+            --name "app-${GITHUB_SHA}.apk" \
+            --type ANDROID_APP \
+            --query upload.arn \
+            --output text)"
+
+          UPLOAD_URL="$(aws devicefarm get-upload \
+            --arn "${UPLOAD_ARN}" \
+            --query upload.url \
+            --output text)"
+
+          HTTP_STATUS="$(curl --silent --fail-with-body \
+            -w '%{http_code}' -o /tmp/df-upload.log \
+            -T "${APK}" "${UPLOAD_URL}" || true)"
+          echo "HTTP status: ${HTTP_STATUS}"
+          cat /tmp/df-upload.log || true
+          if [ "${HTTP_STATUS}" != "200" ]; then
+            echo "APK upload to Device Farm failed (HTTP ${HTTP_STATUS})." && exit 1
+          fi
+          echo "APK upload complete. ARN: ${UPLOAD_ARN}"
+          # NOTE: Scheduling a Device Farm test run requires a test package
+          # and test framework selection. See docs/aws-pipeline.md for details.
