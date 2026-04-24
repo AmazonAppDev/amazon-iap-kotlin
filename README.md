@@ -20,7 +20,9 @@ Push the example [amazon.sdktester.json](https://github.com/AmazonAppDev/amazon-
 ```
 adb push <_Your_JSON_File_Folder_>/amazon.sdktester.json /sdcard/amazon.sdktester.json
 ```
-This JSON file is usually created when you [create IAP items](https://www.youtube.com/watch?v=cmPAY16wGb0) in the developer portal, however, for the sake of this demo we can use an example JSON.
+This JSON file is usually generated when you [create IAP items](https://www.youtube.com/watch?v=cmPAY16wGb0) in the developer portal. For this demo we use the example JSON included in this repo, which defines three IAP items (`techsubscription` as the parent SKU, with `techmonthly` and `techquarterly` as child terms) matching the SKUs the app requests in `MainActivity.kt`.
+
+> The file must be named exactly `amazon.sdktester.json` on the device, and the SKUs inside must match the SKUs the app queries. When you generate your own JSON from the developer portal, define IAP items with the same SKU names, or update `MainActivity.kt` to match yours.
 
 **Step 3:**
 Set your app in sandbox mode using the following command:
@@ -36,9 +38,9 @@ Sandbox mode constrains calls that would normally go to the Appstore client to r
 **Step 4:**
 Open the Amazon App Tester app. You should now see the IAP items from your JSON file.
 
-![image](https://user-images.githubusercontent.com/39306477/215546889-50440242-bc6f-4408-acd0-1c57936ac3c1.png)
+You can now run the demo app:
 
-You can now run the demo app!
+![sample app showing the three IAP items loaded from the sandbox](docs/images/sample-app.png)
 
 *Note: When you run the demo app, it uses the App Tester, which allows you to test the In-App Purchasing (IAP) functionality of your app in sandbox mode.*
 
