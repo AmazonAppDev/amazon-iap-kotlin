@@ -1,0 +1,23 @@
+{
+  "techsubscription": {
+    "description": "Tech Magazine subscription (parent SKU)",
+    "title": "Tech Magazine",
+    "itemType": "SUBSCRIPTION",
+    "price": 9.99,
+    "subscriptionParent": "techsubscription"
+  },
+  "techmonthly": {
+    "description": "Monthly subscription to Tech Magazine",
+    "title": "Tech Magazine - Monthly",
+    "itemType": "SUBSCRIPTION",
+    "price": 4.99,
+    "subscriptionParent": "techsubscription"
+  },
+  "techquarterly": {
+    "description": "Quarterly subscription to Tech Magazine",
+    "title": "Tech Magazine - Quarterly",
+    "itemType": "SUBSCRIPTION",
+    "price": 12.99,
+    "subscriptionParent": "techsubscription"
+  }
+}

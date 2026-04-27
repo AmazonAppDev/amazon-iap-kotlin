@@ -12,14 +12,19 @@ This project is a simple demonstration of the [Amazon IAP API](https://developer
 
 ## 🧪 How to test with In-App Items
 
-**Step 1:** 
+**Step 1:**
+Install the Amazon App Tester from the Amazon Appstore on your Fire tablet, then open it once so it's ready to receive your IAP config.
+
+**Step 2:**
 Push the example [amazon.sdktester.json](https://github.com/AmazonAppDev/amazon-iap-kotlin/blob/main/amazon.sdktester.json) file to your device using the command:
 ```
 adb push <_Your_JSON_File_Folder_>/amazon.sdktester.json /sdcard/amazon.sdktester.json
 ```
-This JSON file is usually created when you [create IAP items](https://www.youtube.com/watch?v=cmPAY16wGb0) in the developer portal, however, for the sake of this demo we can use an example JSON.
+This JSON file is usually generated when you [create IAP items](https://www.youtube.com/watch?v=cmPAY16wGb0) in the developer portal. For this demo we use the example JSON included in this repo, which defines three IAP items (`techsubscription` as the parent SKU, with `techmonthly` and `techquarterly` as child terms) matching the SKUs the app requests in `MainActivity.kt`.
 
-**Step 2:**
+> The file must be named exactly `amazon.sdktester.json` on the device, and the SKUs inside must match the SKUs the app queries. When you generate your own JSON from the developer portal, define IAP items with the same SKU names, or update `MainActivity.kt` to match yours.
+
+**Step 3:**
 Set your app in sandbox mode using the following command:
 
 ```
@@ -28,12 +33,14 @@ adb shell setprop debug.amazon.sandboxmode debug
 
 Sandbox mode constrains calls that would normally go to the Appstore client to route to the Amazon App Tester app instead. Use this mode only for testing locally.
 
-**Step 3:** 
-Install the IAP app tester from the Amazon appstore. Once you install it you should be able to see the JSON file of the IAP items you created.
+> ⚠️ This property is not persistent across device reboots — re-run the command after every reboot. Before building a release, clear it with `adb shell setprop debug.amazon.sandboxmode ""`.
 
-![image](https://user-images.githubusercontent.com/39306477/215546889-50440242-bc6f-4408-acd0-1c57936ac3c1.png)
+**Step 4:**
+Open the Amazon App Tester app. You should now see the IAP items from your JSON file.
 
-You can now run the demo app!
+You can now run the demo app:
+
+![sample app showing the three IAP items loaded from the sandbox](docs/images/sample-app.png)
 
 *Note: When you run the demo app, it uses the App Tester, which allows you to test the In-App Purchasing (IAP) functionality of your app in sandbox mode.*
 
